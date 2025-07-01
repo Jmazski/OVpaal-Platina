@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>Bussie OV-Paal Passagiers</title>
+    <style>
+        :root {
+            --ocean-blue: #1976d2;
+            --sand: #e1b382;
+            --sand-dark: #b0885a;
+            --white: #fff;
+            --shadow: 0 4px 16px 0 rgba(0,0,0,0.13);
+            --border-radius: 18px;
+        }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: var(--ocean-blue);
+            min-height: 100vh;
+            color: var(--white);
+        }
+        h1 {
+            margin: 32px 0 16px 0;
+            text-align: center;
+            letter-spacing: 0.03em;
+        }
+        #container {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 36px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .card {
+            background: var(--sand);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 32px 28px;
+            margin: 0 0 36px 0;
+            color: var(--white);
+            min-width: 265px;
+        }
+        #passengerList.card {
+            min-width: 250px;
+            margin-top: 0;
+        }
+        #main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+        }
+        #center-top.card {
+            width: 420px;
+            align-self: flex-start;
+            margin-bottom: 28px;
+        }
+        #output.card {
+            position: static;
+            margin: 0;
+            min-width: 320px;
+            max-width: 420px;
+            margin-top: 16px;
+            overflow-x: auto;
+            padding: 18px 12px;
+            font-size: 0.93em;
+            display: none;
+        }
+        #output.card.visible {
+            display: block;
+            animation: fadein 0.25s;
+        }
+        @keyframes fadein {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+        #actionPassenger {
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: left;
+            min-height: 2.5em;
+            margin-bottom: 1.5em;
+        }
+        #actions {
+            margin-bottom: 1em;
+            text-align: left;
+        }
+        button {
+            padding: 0.7em 2em;
+            font-size: 1.1em;
+            margin: 1em 0.5em 1em 0;
+            border-radius: 10px;
+            border: none;
+            background: var(--sand-dark);
+            color: var(--white);
+            box-shadow: 0 2px 8px 0 rgba(0,0,0,0.10);
+            transition: background 0.18s;
+            cursor: pointer;
+        }
+        button:disabled {
+            background: #a29a8f;
+            color: #e0e0e0;
+            cursor: not-allowed;
+        }
+        #showListBtn {
+            margin: 16px 0 0 0;
+            width: 100%;
+            background: var(--sand-dark);
+            color: var(--white);
+            font-size: 1.02em;
+            font-weight: bold;
+            padding: 0.8em 0;
+            box-shadow: var(--shadow);
+            border-radius: 10px;
+        }
+        #ovOpzegCard {
+            min-width: 200px;
+            padding: 32px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 10px;
+            margin-top: 0;
+            margin-bottom: 0;
+            height: fit-content;
+            background: var(--sand);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+        #ovOpzegBtn {
+            width: 100%;
+            background: var(--sand-dark);
+            color: var(--white);
+            font-size: 1.02em;
+            font-weight: bold;
+            padding: 0.8em 0;
+            box-shadow: var(--shadow);
+            border-radius: 10px;
+            margin-top: 10px;
+            margin-bottom: 0;
+        }
+        #saldoMelding {
+            display:none;
+            position:fixed;
+            bottom:24px;
+            left:50%;
+            transform:translateX(-50%);
+            background:#b0885a;
+            color:#fff;
+            padding:14px 28px;
+            border-radius:14px;
+            box-shadow:0 2px 12px 0 rgba(0,0,0,0.10);
+            font-size:1.08em;
+            z-index:3000;
+        }
+        #removeModal,
+        #rijbewijsModal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(25, 118, 210, 0.90);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        #removeModal.active,
+        #rijbewijsModal.active {
+            display: flex;
+        }
+        #modalInner,
+        #rijbewijsInner {
+            background: var(--sand);
+            border-radius: 24px;
+            padding: 38px 32px 28px 32px;
+            max-width: 600px;
+            min-width: 340px;
+            box-shadow: 0 8px 48px 0 rgba(0,0,0,0.20);
+            color: var(--white);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: fadein 0.23s;
+        }
+        #modalInner h2 {
+            color: var(--white);
+            margin-top: 0;
+            margin-bottom: 22px;
+            letter-spacing: 0.03em;
+        }
+        #rijbewijsInner h2 {
+            color: var(--white);
+            margin-top: 0;
+            margin-bottom: 22px;
+            letter-spacing: 0.03em;
+            font-size: 1.35em;
+            text-align: center;
+        }
+        #modalNames {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px 12px;
+            margin-bottom: 20px;
+            width: 100%;
+            justify-content: center;
+        }
+        .removeNameBtn {
+            padding: 0.5em 1.2em;
+            font-size: 1.04em;
+            margin: 0;
+            border-radius: 8px;
+            border: none;
+            background: var(--sand-dark);
+            color: var(--white);
+            box-shadow: 0 1px 4px 0 rgba(0,0,0,0.11);
+            cursor: pointer;
+            min-width: 90px;
+            max-width: 150px;
+            transition: background 0.18s, transform 0.12s;
+            white-space: nowrap;
+            text-align: center;
+        }
+        .removeNameBtn:hover {
+            background: #a97a47;
+            transform: translateY(-2px) scale(1.06);
+        }
+        #closeModalBtn {
+            margin-top: 5px;
+            padding: 0.5em 1.4em;
+            font-size: 1em;
+            background: #c87f4a;
+            color: var(--white);
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 1px 4px 0 rgba(0,0,0,0.13);
+        }
+        #herstartBtn {
+            margin-top: 18px;
+            padding: 0.8em 2em;
+            font-size: 1.18em;
+            background: var(--sand-dark);
+            color: var(--white);
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 1px 6px 0 rgba(0,0,0,0.18);
+            font-weight: bold;
+        }
+        /* Video rechtsonder netjes */
+        #busVideoContainer {
+            position: fixed;
+            right: 24px;
+            bottom: 24px;
+            z-index: 1000;
+            width: 280px;
+            max-width: 40vw;
+            pointer-events: none;
+            box-shadow: 0 4px 18px 0 rgba(0,0,0,0.18);
+            border-radius: 16px;
+            background: rgba(0,0,0,0.12);
+        }
+        #busVideoContainer video {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 16px;
+            background: #000;
+        }
+        @media (max-width: 950px) {
+            #container {
+                flex-direction: column;
+                align-items: center;
+                gap: 18px;
+            }
+            #center-top.card, #output.card {
+                width: 100%;
+                min-width: unset;
+                max-width: unset;
+            }
+            #main {
+                width: 100%;
+                align-items: center;
+            }
+            #output.card {
+                margin-top: 14px;
+            }
+            #ovOpzegCard {
+                width: 90vw;
+                min-width: unset;
+                max-width: 350px;
+            }
+            #modalInner, #rijbewijsInner {
+                min-width: 200px;
+                max-width: 96vw;
+                padding: 20px 5vw 20px 5vw;
+            }
+            #busVideoContainer {
+                width: 98vw;
+                right: 1vw;
+                bottom: 8px;
+                max-width: 98vw;
+                border-radius: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Bussie OV-Paal Passagiers</h1>
+    <div id="container">
+        <div id="passengerList" class="card">
+            <h3>Passagiers in de bus</h3>
+            <ol id="list"></ol>
+            <button id="showListBtn">De Lijst</button>
+        </div>
+        <div id="main">
+            <div id="center-top" class="card">
+                <div id="actionPassenger"></div>
+                <div id="actions">
+                    <button id="addBtn">Instappen</button>
+                    <button id="exitBtn">Uitstappen</button>
+                </div>
+            </div>
+            <div id="output" class="card"></div>
+        </div>
+        <div id="ovOpzegCard" class="card">
+            <button id="ovOpzegBtn">OV opzeggen</button>
+        </div>
+    </div>
+    <div id="saldoMelding"></div>
+    <div id="removeModal">
+        <div id="modalInner">
+            <h2>Kies een passagier om OV te verwijderen</h2>
+            <div id="modalNames"></div>
+            <button id="closeModalBtn">Sluiten</button>
+        </div>
+    </div>
+    <div id="rijbewijsModal">
+        <div id="rijbewijsInner">
+            <h2>Zo te zien heeft iedereen hun rijbewijs...</h2>
+            <button id="herstartBtn">Herstart?</button>
+        </div>
+    </div>
+    <!-- Video & Muziek & Soundeffect -->
+    <div id="busVideoContainer">
+        <video id="busVideo" src="Effects/bus.mp4" autoplay loop muted playsinline></video>
+        <video id="instapVideo" src="Effects/Instap.mp4" style="display:none" muted playsinline></video>
+    </div>
+    <audio id="bgMusic" src="Effects/Muz.mp3" loop preload="auto"></audio>
+    <audio id="beepSound" src="Effects/Beep.mp3" preload="auto"></audio>
+    <script src="ovpaal.js"></script>
+</body>
+</html>
